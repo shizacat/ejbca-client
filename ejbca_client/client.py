@@ -222,10 +222,13 @@ class EjbcaClient:
         result = []
         r = self._client.service.getLastCAChain(ca_name)
         for item in r:
-            cert = "-----BEGIN CERTIFICATE-----\n{}\n-----END CERTIFICATE-----"
-            cert = cert.format(item.certificateData.decode())
-            result.append(cert)
+            result.append(self._cert_data_to_pem(item))
         return "\n\n".join(result)
+
+    def get_certificate_by_sn(self, sn: str, issuer: str):
+        """Return certificate in PEM by him serial number in hex"""
+        r = self._client.service.getCertificate(sn, issuer)
+        return self._cert_data_to_pem(r)
 
     def _generate_csr(
         self,
@@ -318,3 +321,8 @@ class EjbcaClient:
             OpenSSL.crypto.FILETYPE_PEM, os_pkey
         )
         return data.decode()
+
+    def _cert_data_to_pem(self, cert_data: "certificate") -> str:
+        """Extract from certificate object only certificate"""
+        cert = "-----BEGIN CERTIFICATE-----\n{}\n-----END CERTIFICATE-----"
+        return cert.format(cert_data.certificateData.decode())
