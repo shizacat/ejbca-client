@@ -15,6 +15,7 @@ from .data import (
     CertificateHelper
 )
 from .utils import SubjectDN
+from .exception import EjbcaClientException
 
 
 class EjbcaClient:
@@ -76,21 +77,24 @@ class EjbcaClient:
     def find_user_by_dn(self, dn: str) -> List["userDataVOWS"]:
         """
         Raises:
-            zeep.exceptions.Fault
+            EjbcaClientException
         """
-        # Type
-        userMatch = self._client.get_type(
-            "{http://ws.protocol.core.ejbca.org/}userMatch"
-        )
-
-        # List of userDataVOWS
-        r = self._client.service.findUser(
-            userMatch(
-                UserMatch.MATCH_TYPE_CONTAINS.value,
-                dn,
-                UserMatch.MATCH_WITH_DN.value
+        try:
+            # Type
+            userMatch = self._client.get_type(
+                "{http://ws.protocol.core.ejbca.org/}userMatch"
             )
-        )
+
+            # List of userDataVOWS
+            r = self._client.service.findUser(
+                userMatch(
+                    UserMatch.MATCH_TYPE_CONTAINS.value,
+                    dn,
+                    UserMatch.MATCH_WITH_DN.value
+                )
+            )
+        except zeep.exceptions.Fault as e:
+            raise EjbcaClientException(str(e))
         return r
 
     def generate_certificate(
@@ -115,6 +119,9 @@ class EjbcaClient:
             username
             password
             subjectDN
+
+        Raises:
+            EjbcaClientException
 
         Return
             Certificate in PEM, Private key in PEM
@@ -142,17 +149,20 @@ class EjbcaClient:
         private_key, csr = self._generate_csr(
             common_name=subject_dn.cn, bits=bits)
 
-        # requestData - the PKCS10/CRMF/SPKAC/PUBLICKEY request in base64
-        r = self._client.service.certificateRequest(
-            user,  # UserDataVOWS
-            csr,   # requestData
-            CertificateHelper.CERT_REQ_TYPE_PKCS10,  # requestType
-            None,  # hardTokenSN
-            CertificateHelper.RESPONSETYPE_CERTIFICATE  # responseType
-        )
+        try:
+            # requestData - the PKCS10/CRMF/SPKAC/PUBLICKEY request in base64
+            r = self._client.service.certificateRequest(
+                user,  # UserDataVOWS
+                csr,   # requestData
+                CertificateHelper.CERT_REQ_TYPE_PKCS10,  # requestType
+                None,  # hardTokenSN
+                CertificateHelper.RESPONSETYPE_CERTIFICATE  # responseType
+            )
 
-        cert = "-----BEGIN CERTIFICATE-----\n{}\n-----END CERTIFICATE-----"
-        cert = cert.format(r["data"].decode())
+            cert = "-----BEGIN CERTIFICATE-----\n{}\n-----END CERTIFICATE-----"
+            cert = cert.format(r["data"].decode())
+        except zeep.exceptions.Fault as e:
+            raise EjbcaClientException(str(e))
 
         return cert, private_key
 
@@ -192,17 +202,20 @@ class EjbcaClient:
         user.endEntityProfileName = end_entity_profile_name
         user.certificateProfileName = cert_profile_name
 
-        self._client.service.editUser(user)
+        try:
+            self._client.service.editUser(user)
 
-        r = self._client.service.pkcs12Req(
-            user.username,
-            user.password,
-            None,
-            str(bits),
-            AlgorithmConstants.KEYALGORITHM_RSA
-        )
+            r = self._client.service.pkcs12Req(
+                user.username,
+                user.password,
+                None,
+                str(bits),
+                AlgorithmConstants.KEYALGORITHM_RSA
+            )
 
-        p12_dump = base64.b64decode(r["keystoreData"])
+            p12_dump = base64.b64decode(r["keystoreData"])
+        except zeep.exceptions.Fault as e:
+            raise EjbcaClientException(str(e))
 
         cert = self._p12_extract_cert(p12_dump, password)
         pkey = self._p12_extract_private_key(p12_dump, password)
@@ -211,7 +224,10 @@ class EjbcaClient:
 
     def get_latest_crl(self, ca_name: str) -> str:
         """ Return CRL in PEM format """
-        r = self._client.service.getLatestCRL(ca_name, False)
+        try:
+            r = self._client.service.getLatestCRL(ca_name, False)
+        except zeep.exceptions.Fault as e:
+            raise EjbcaClientException(str(e))
         # convert DER to PEM
         crl_obj = OpenSSL.crypto.load_crl(OpenSSL.crypto.FILETYPE_ASN1, r)
         crl_pem = OpenSSL.crypto.dump_crl(OpenSSL.crypto.FILETYPE_PEM, crl_obj)
@@ -220,19 +236,28 @@ class EjbcaClient:
     def get_latest_ca_chain(self, ca_name: str) -> str:
         """ Retrun CA Chanin in PEM """
         result = []
-        r = self._client.service.getLastCAChain(ca_name)
+        try:
+            r = self._client.service.getLastCAChain(ca_name)
+        except zeep.exceptions.Fault as e:
+            raise EjbcaClientException(str(e))
         for item in r:
             result.append(self._cert_data_to_pem(item))
         return "\n\n".join(result)
 
     def get_certificate_by_sn(self, sn: str, issuer: str) -> str:
         """Return certificate in PEM by him serial number in hex"""
-        r = self._client.service.getCertificate(sn, issuer)
+        try:
+            r = self._client.service.getCertificate(sn, issuer)
+        except zeep.exceptions.Fault as e:
+            raise EjbcaClientException(str(e))
         return self._cert_data_to_pem(r)
 
     def revoke_certificate_by_sn(self, sn: str, issuer: str):
         """Revoke certificate by him serial number in hex"""
-        self._client.service.revokeCert(issuer, sn, 0)
+        try:
+            self._client.service.revokeCert(issuer, sn, 0)
+        except zeep.exceptions.Fault as e:
+            raise EjbcaClientException(str(e))
 
     def _generate_csr(
         self,
