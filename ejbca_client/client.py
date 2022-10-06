@@ -225,10 +225,14 @@ class EjbcaClient:
             result.append(self._cert_data_to_pem(item))
         return "\n\n".join(result)
 
-    def get_certificate_by_sn(self, sn: str, issuer: str):
+    def get_certificate_by_sn(self, sn: str, issuer: str) -> str:
         """Return certificate in PEM by him serial number in hex"""
         r = self._client.service.getCertificate(sn, issuer)
         return self._cert_data_to_pem(r)
+
+    def revoke_certificate_by_sn(self, sn: str, issuer: str):
+        """Revoke certificate by him serial number in hex"""
+        self._client.service.revokeCert(issuer, sn, 0)
 
     def _generate_csr(
         self,
