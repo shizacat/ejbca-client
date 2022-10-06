@@ -5,6 +5,7 @@ from typing import Optional, Union, List, Tuple
 import zeep
 from zeep.transports import Transport
 import OpenSSL
+import OpenSSL.crypto
 import requests
 
 from .data import (
@@ -207,6 +208,14 @@ class EjbcaClient:
         pkey = self._p12_extract_private_key(p12_dump, password)
 
         return cert, pkey
+
+    def get_latest_crl(self, ca_name: str) -> str:
+        """ Return CRL in PEM format """
+        r = self._client.service.getLatestCRL(ca_name, False)
+        # convert DER to PEM
+        crl_obj = OpenSSL.crypto.load_crl(OpenSSL.crypto.FILETYPE_ASN1, r)
+        crl_pem = OpenSSL.crypto.dump_crl(OpenSSL.crypto.FILETYPE_PEM, crl_obj)
+        return crl_pem.decode()
 
     def _generate_csr(
         self,
