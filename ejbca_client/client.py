@@ -217,6 +217,16 @@ class EjbcaClient:
         crl_pem = OpenSSL.crypto.dump_crl(OpenSSL.crypto.FILETYPE_PEM, crl_obj)
         return crl_pem.decode()
 
+    def get_latest_ca_chain(self, ca_name: str) -> str:
+        """ Retrun CA Chanin in PEM """
+        result = []
+        r = self._client.service.getLastCAChain(ca_name)
+        for item in r:
+            cert = "-----BEGIN CERTIFICATE-----\n{}\n-----END CERTIFICATE-----"
+            cert = cert.format(item.certificateData.decode())
+            result.append(cert)
+        return "\n\n".join(result)
+
     def _generate_csr(
         self,
         common_name: str,
