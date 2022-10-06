@@ -165,8 +165,7 @@ class EjbcaClient:
         end_entity_profile_name: str = "EMPTY",
         cert_profile_name: str = "ENDUSER",
     ) -> bytes:
-        """Создает сертификат, но ключ генериться сервером
-        Через создание пользователя через RA
+        """Generate certificate and private key on server
 
         Args:
             username
