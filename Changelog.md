@@ -1,4 +1,6 @@
 ## [Unreleased]
+
+## [1.0.3]
 ### Update
 - Set args: end_entity_profile_name, cert_profile_name as None
   for functions: generate_certificate_pkey_on_server, generate_certificate
