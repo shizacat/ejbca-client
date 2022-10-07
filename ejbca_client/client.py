@@ -21,6 +21,8 @@ from .exception import EjbcaClientException
 class EjbcaClient:
 
     _wsdl_path = "/ejbca/ejbcaws/ejbcaws?wsdl"
+    _default_end_entity_profile_name = "EMPTY"
+    _default_cert_profile_name = "ENDUSER"
 
     def __init__(
         self,
@@ -104,8 +106,8 @@ class EjbcaClient:
         password: str,
         subject_dn: SubjectDN,
         bits: int = 2048,
-        end_entity_profile_name: str = "EMPTY",
-        cert_profile_name: str = "ENDUSER",
+        end_entity_profile_name: Optional[str] = None,
+        cert_profile_name: Optional[str] = None,
     ) -> Tuple[str, str]:
         """This function create user and it generate for them certificate
         The private key is generated local.
@@ -126,6 +128,12 @@ class EjbcaClient:
         Return
             Certificate in PEM, Private key in PEM
         """
+        # Prepea
+        if end_entity_profile_name is None:
+            end_entity_profile_name = self._default_end_entity_profile_name
+        if cert_profile_name is None:
+            cert_profile_name = self._default_cert_profile_name
+
         # Type
         userDataVOWS = self._client.get_type(
             '{http://ws.protocol.core.ejbca.org/}userDataVOWS')
@@ -173,8 +181,8 @@ class EjbcaClient:
         password: str,
         subject_dn: SubjectDN,
         bits: int = 2048,
-        end_entity_profile_name: str = "EMPTY",
-        cert_profile_name: str = "ENDUSER",
+        end_entity_profile_name: Optional[str] = None,
+        cert_profile_name: Optional[str] = None,
     ) -> bytes:
         """Generate certificate and private key on server
 
@@ -183,6 +191,12 @@ class EjbcaClient:
             password
             subjectDN
         """
+        # Prepea
+        if end_entity_profile_name is None:
+            end_entity_profile_name = self._default_end_entity_profile_name
+        if cert_profile_name is None:
+            cert_profile_name = self._default_cert_profile_name
+
         # Type
         userDataVOWS = self._client.get_type(
             '{http://ws.protocol.core.ejbca.org/}userDataVOWS')
