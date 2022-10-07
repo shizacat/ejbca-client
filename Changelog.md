@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+## [1.0.2]
+### Fix
+- Fix setup.cfg
+
 ## [1.0.1]
 ### Added
 - Add exceptions.
