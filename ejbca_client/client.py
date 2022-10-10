@@ -273,6 +273,39 @@ class EjbcaClient:
         except zeep.exceptions.Fault as e:
             raise EjbcaClientException(str(e))
 
+    def restore_certificate_and_private_key_by_sn(
+        self,
+        sn: str,
+        issuer: str,
+        username: str,
+        password: str
+    ) -> Tuple[str, str]:
+        """Restore certificate,
+        for this in end_entity_profile options recoverable must be enabled
+
+        Args:
+            sn - Serial Number Hex
+            issuer - Issuer DN
+
+        Return
+            Certificate in PEM, Private key in PEM
+        """
+        try:
+            # Marked the certificate as recover
+            self._client.service.keyRecover(username, sn, issuer)
+
+            # Set new password and get certificate and pkey in p12 format
+            r = self._client.service.keyRecoverEnroll(
+                username, sn, issuer, password, None
+            )
+            result = base64.b64decode(r["keystoreData"])
+        except zeep.exceptions.Fault as e:
+            raise EjbcaClientException(str(e))
+        return (
+            self._p12_extract_cert(result, password=password),
+            self._p12_extract_private_key(result, password=password)
+        )
+
     def _generate_csr(
         self,
         common_name: str,
