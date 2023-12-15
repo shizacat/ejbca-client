@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+## [1.0.5]
+### Fix
+- Fix version pyOpenSSL == 22.1.0
+
 ## [1.0.4]
 ### Added
 - Method restore_certificate_and_private_key_by_sn
