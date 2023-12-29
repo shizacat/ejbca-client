@@ -28,4 +28,11 @@ class TestMain(unittest.TestCase):
             organizational_unit="TestOU",
             email_address="<EMAIL>",
         )
-        print(pkey, csr)
+        self.assertIsInstance(pkey, str)
+        self.assertIsInstance(csr, str)
+
+    def test__crl_convert_der2pem(self):
+        with open("tests/data/crl.der", "rb") as f:
+            data = f.read()
+        r = self.obj._crl_convert_der2pem(data)
+        self.assertIsInstance(r, str)

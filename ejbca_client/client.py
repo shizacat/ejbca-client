@@ -4,8 +4,6 @@ from typing import Optional, Union, List, Tuple
 
 import zeep
 from zeep.transports import Transport
-import OpenSSL
-import OpenSSL.crypto
 import requests
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes
@@ -246,10 +244,7 @@ class EjbcaClient:
             r = self._client.service.getLatestCRL(ca_name, False)
         except zeep.exceptions.Fault as e:
             raise EjbcaClientException(str(e))
-        # convert DER to PEM
-        crl_obj = OpenSSL.crypto.load_crl(OpenSSL.crypto.FILETYPE_ASN1, r)
-        crl_pem = OpenSSL.crypto.dump_crl(OpenSSL.crypto.FILETYPE_PEM, crl_obj)
-        return crl_pem.decode()
+        return self._crl_convert_der2pem(r)
 
     def get_latest_ca_chain(self, ca_name: str) -> str:
         """ Retrun CA Chanin in PEM """
@@ -400,6 +395,12 @@ class EjbcaClient:
         certificate_pem = certificate.public_bytes(
             encoding=serialization.Encoding.PEM)
         return private_key_pem.decode(), certificate_pem.decode()
+
+    def _crl_convert_der2pem(self, data_crl: bytes) -> str:
+        """Convert CRL from DER to PEM format"""
+        crl = x509.load_der_x509_crl(data_crl)
+        crl_pem = crl.public_bytes(serialization.Encoding.PEM)
+        return crl_pem.decode()
 
     def _cert_data_to_pem(self, cert_data: "certificate") -> str:
         """Extract from certificate object only certificate"""

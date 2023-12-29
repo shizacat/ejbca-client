@@ -1,6 +1,10 @@
 ## [Unreleased]
 
+## [1.1.0]
+### Added
 - The method '_generate_csr' rewrite on cryptography.
+- Remove work with PyOpenSSL. Now working only with cryptography.
+- Convert CRL through cryptography
 
 ## [1.0.6]
 ### Fix
