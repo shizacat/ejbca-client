@@ -1,2 +1,3 @@
-# ejbca-client
-Ejbca client over SOAP api
+# Python ejbca-client
+
+Python Ejbca client over SOAP api.
