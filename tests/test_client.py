@@ -11,18 +11,6 @@ class TestMain(unittest.TestCase):
             wsdl_path="tests/data/ejbca.6.wsdl.xml",
         )
 
-    def test__p12_extract_cert(self):
-        with open('tests/data/temp.p12', 'rb') as f:
-            data = f.read()
-        r = self.obj._p12_extract_cert(data, "check")
-        self.assertIsInstance(r, str)
-
-    def test__p12_extract_private_key(self):
-        with open('tests/data/temp.p12', 'rb') as f:
-            data = f.read()
-        r = self.obj._p12_extract_private_key(data, "check")
-        self.assertIsInstance(r, str)
-
     def test__p12_extract_pkey_cert(self):
         with open('tests/data/temp.p12', 'rb') as f:
             data = f.read()

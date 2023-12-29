@@ -383,47 +383,6 @@ class EjbcaClient:
             encoding=serialization.Encoding.PEM)
         return private_key_pem.decode(), certificate_pem.decode()
 
-    def _p12_extract_cert(
-        self, data: bytes, password: Optional[str] = None
-    ) -> str:
-        """Extract from p12 certificate
-
-        Args:
-            data - format pkcs12 (*.p12)
-
-        Return
-            Certificate in PEM
-        """
-        if password is not None:
-            password = password.encode()
-
-        _, certificate, _ = pkcs12.load_key_and_certificates(data, password)
-        certificate_pem = certificate.public_bytes(
-            encoding=serialization.Encoding.PEM)
-        return certificate_pem.decode()
-
-    def _p12_extract_private_key(
-        self, data: bytes, password: Optional[str] = None
-    ) -> str:
-        """Extract from p12 private key
-
-        Args:
-            data - format pkcs12 (*.p12)
-
-        Return
-            Private key in PEM
-        """
-        if password is not None:
-            password = password.encode()
-
-        private_key, _, _ = pkcs12.load_key_and_certificates(data, password)
-        private_key_pem = private_key.private_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PrivateFormat.PKCS8,
-            encryption_algorithm=serialization.NoEncryption()
-        )
-        return private_key_pem.decode()
-
     def _cert_data_to_pem(self, cert_data: "certificate") -> str:
         """Extract from certificate object only certificate"""
         cert = "-----BEGIN CERTIFICATE-----\n{}\n-----END CERTIFICATE-----"
