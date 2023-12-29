@@ -7,6 +7,10 @@ from zeep.transports import Transport
 import OpenSSL
 import OpenSSL.crypto
 import requests
+from cryptography import x509
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.x509.oid import NameOID
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.serialization import pkcs12
 
@@ -328,35 +332,49 @@ class EjbcaClient:
         Return:
             private key in PEM, CSR in PEM
         """
-        private_key = None
+        # Generate private key
+        private_key = rsa.generate_private_key(
+            public_exponent=65537,
+            key_size=bits
+        )
 
-        req = OpenSSL.crypto.X509Req()
-        req.get_subject().CN = common_name
+        # Create CSR
+        attributes = []
+        if country:
+            attributes.append(
+                x509.NameAttribute(NameOID.COUNTRY_NAME, country))
+        if city:
+            attributes.append(
+                x509.NameAttribute(NameOID.LOCALITY_NAME, city))
+        if organization:
+            attributes.append(
+                x509.NameAttribute(NameOID.ORGANIZATION_NAME, organization))
+        if organizational_unit:
+            attributes.append(
+                x509.NameAttribute(
+                    NameOID.ORGANIZATIONAL_UNIT_NAME, organizational_unit)
+            )
+        if email_address:
+            attributes.append(
+                x509.NameAttribute(NameOID.EMAIL_ADDRESS, email_address))
+        csr_builder = x509.CertificateSigningRequestBuilder()
+        csr_builder = csr_builder.subject_name(
+            x509.Name([
+                x509.NameAttribute(NameOID.COMMON_NAME, common_name),
+            ] + attributes)
+        )
 
-        if country is not None:
-            req.get_subject().C = country
-        if city is not None:
-            req.get_subject().L = city
-        if organization is not None:
-            req.get_subject().O = organization
-        if organizational_unit is not None:
-            req.get_subject().OU = organizational_unit
-        if email_address is not None:
-            req.get_subject().emailAddress = email_address
+        csr = csr_builder.sign(private_key, hashes.SHA256())
 
-        # Private key
-        key = OpenSSL.crypto.PKey()
-        key.generate_key(OpenSSL.crypto.TYPE_RSA, bits)
-        req.set_pubkey(key)
-        req.sign(key, 'sha256')
-        private_key = OpenSSL.crypto.dump_privatekey(
-            OpenSSL.crypto.FILETYPE_PEM, key)
+        # Convert to pem
+        private_key_pem = private_key.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.PKCS8,
+            encryption_algorithm=serialization.NoEncryption()
+        )
+        csr_pem = csr.public_bytes(serialization.Encoding.PEM)
 
-        # CSR
-        csr = OpenSSL.crypto.dump_certificate_request(
-                   OpenSSL.crypto.FILETYPE_PEM, req)
-
-        return private_key.decode(), csr.decode()
+        return private_key_pem.decode(), csr_pem.decode()
 
     def _p12_extract_pkey_cert(
         self, data: bytes, password: Optional[str] = None

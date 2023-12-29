@@ -17,3 +17,15 @@ class TestMain(unittest.TestCase):
         pkey, cert = self.obj._p12_extract_pkey_cert(data, "check")
         self.assertIsInstance(pkey, str)
         self.assertIsInstance(cert, str)
+
+    def test__generate_csr(self):
+        pkey, csr = self.obj._generate_csr(
+            common_name="check",
+            bits=2048,
+            country="US",
+            city="New York",
+            organization="Test",
+            organizational_unit="TestOU",
+            email_address="<EMAIL>",
+        )
+        print(pkey, csr)

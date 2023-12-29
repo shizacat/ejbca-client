@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+- The method '_generate_csr' rewrite on cryptography.
+
 ## [1.0.6]
 ### Fix
 - Remove methods OpenSSL.crypto.load_pkcs12. Work with pkcs12 through cryptography.
