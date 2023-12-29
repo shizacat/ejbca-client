@@ -7,6 +7,8 @@ from zeep.transports import Transport
 import OpenSSL
 import OpenSSL.crypto
 import requests
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.serialization import pkcs12
 
 from .data import (
     UserMatch,
@@ -231,9 +233,7 @@ class EjbcaClient:
         except zeep.exceptions.Fault as e:
             raise EjbcaClientException(str(e))
 
-        cert = self._p12_extract_cert(p12_dump, password)
-        pkey = self._p12_extract_private_key(p12_dump, password)
-
+        pkey, cert = self._p12_extract_pkey_cert(p12_dump, password)
         return cert, pkey
 
     def get_latest_crl(self, ca_name: str) -> str:
@@ -301,10 +301,8 @@ class EjbcaClient:
             result = base64.b64decode(r["keystoreData"])
         except zeep.exceptions.Fault as e:
             raise EjbcaClientException(str(e))
-        return (
-            self._p12_extract_cert(result, password=password),
-            self._p12_extract_private_key(result, password=password)
-        )
+        pkey, cert = self._p12_extract_pkey_cert(result, password)
+        return cert, pkey
 
     def _generate_csr(
         self,
@@ -360,6 +358,31 @@ class EjbcaClient:
 
         return private_key.decode(), csr.decode()
 
+    def _p12_extract_pkey_cert(
+        self, data: bytes, password: Optional[str] = None
+    ) -> Tuple[str, str]:
+        """Extract from p12 private key and certificate
+
+        Args:
+            data - format pkcs12 (*.p12)
+            password - <PASSWORD>
+
+        Return
+            Private key in PEM, Certificate in PEM
+        """
+        if password is not None:
+            password = password.encode()
+        private_key, certificate, _ = pkcs12.load_key_and_certificates(
+            data, password)
+        private_key_pem = private_key.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.PKCS8,
+            encryption_algorithm=serialization.NoEncryption()
+        )
+        certificate_pem = certificate.public_bytes(
+            encoding=serialization.Encoding.PEM)
+        return private_key_pem.decode(), certificate_pem.decode()
+
     def _p12_extract_cert(
         self, data: bytes, password: Optional[str] = None
     ) -> str:
@@ -371,13 +394,13 @@ class EjbcaClient:
         Return
             Certificate in PEM
         """
-        pkcs12 = OpenSSL.crypto.load_pkcs12(data, password)
-        os_cert = pkcs12.get_certificate()
+        if password is not None:
+            password = password.encode()
 
-        data = OpenSSL.crypto.dump_certificate(
-            OpenSSL.crypto.FILETYPE_PEM, os_cert
-        )
-        return data.decode()
+        _, certificate, _ = pkcs12.load_key_and_certificates(data, password)
+        certificate_pem = certificate.public_bytes(
+            encoding=serialization.Encoding.PEM)
+        return certificate_pem.decode()
 
     def _p12_extract_private_key(
         self, data: bytes, password: Optional[str] = None
@@ -390,13 +413,16 @@ class EjbcaClient:
         Return
             Private key in PEM
         """
-        pkcs12 = OpenSSL.crypto.load_pkcs12(data, password)
-        os_pkey = pkcs12.get_privatekey()
+        if password is not None:
+            password = password.encode()
 
-        data = OpenSSL.crypto.dump_privatekey(
-            OpenSSL.crypto.FILETYPE_PEM, os_pkey
+        private_key, _, _ = pkcs12.load_key_and_certificates(data, password)
+        private_key_pem = private_key.private_bytes(
+            encoding=serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.PKCS8,
+            encryption_algorithm=serialization.NoEncryption()
         )
-        return data.decode()
+        return private_key_pem.decode()
 
     def _cert_data_to_pem(self, cert_data: "certificate") -> str:
         """Extract from certificate object only certificate"""
