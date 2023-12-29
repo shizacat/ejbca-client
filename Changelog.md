@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+## [1.0.6]
+### Fix
+- Remove methods OpenSSL.crypto.load_pkcs12. Work with pkcs12 through cryptography.
+
 ## [1.0.5]
 ### Fix
 - Fix version pyOpenSSL == 22.1.0
