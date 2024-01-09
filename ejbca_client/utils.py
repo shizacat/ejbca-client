@@ -1,7 +1,7 @@
 from typing import Optional
 from dataclasses import dataclass
 
-import OpenSSL.crypto
+from cryptography import x509
 
 
 @dataclass
@@ -27,6 +27,5 @@ class SubjectDN:
 
 
 def cert_pem_extract_serial(cert: str) -> str:
-    cert_obj = OpenSSL.crypto.load_certificate(
-        OpenSSL.crypto.FILETYPE_PEM, cert)
-    return "{:x}".format(cert_obj.get_serial_number())
+    cert_obj = x509.load_pem_x509_certificate(cert.encode())
+    return "{:x}".format(cert_obj.serial_number)

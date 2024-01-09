@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+## [1.1.1]
+### Fix
+- Miss OpenSSL, in function cert_pem_extract_serial work through cryptography
+
 ## [1.1.0]
 ### Added
 - The method '_generate_csr' rewrite on cryptography.
