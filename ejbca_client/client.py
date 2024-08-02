@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Optional, Union, List, Tuple
 
 import zeep
+import zeep.exceptions
 from zeep.transports import Transport
 import requests
 from cryptography import x509
@@ -19,7 +20,7 @@ from .data import (
     CertificateHelper
 )
 from .utils import SubjectDN
-from .exception import EjbcaClientException
+from .exception import EjbcaClientException, ZeepError
 
 
 class EjbcaClient:
@@ -101,6 +102,8 @@ class EjbcaClient:
             )
         except zeep.exceptions.Fault as e:
             raise EjbcaClientException(str(e))
+        except zeep.exceptions.Error as e:
+            raise ZeepError(str(e))
         return r
 
     def generate_certificate(
@@ -175,6 +178,8 @@ class EjbcaClient:
             cert = cert.format(r["data"].decode())
         except zeep.exceptions.Fault as e:
             raise EjbcaClientException(str(e))
+        except zeep.exceptions.Error as e:
+            raise ZeepError(str(e))
 
         return cert, private_key
 
@@ -234,6 +239,8 @@ class EjbcaClient:
             p12_dump = base64.b64decode(r["keystoreData"])
         except zeep.exceptions.Fault as e:
             raise EjbcaClientException(str(e))
+        except zeep.exceptions.Error as e:
+            raise ZeepError(str(e))
 
         pkey, cert = self._p12_extract_pkey_cert(p12_dump, password)
         return cert, pkey
@@ -244,6 +251,8 @@ class EjbcaClient:
             r = self._client.service.getLatestCRL(ca_name, False)
         except zeep.exceptions.Fault as e:
             raise EjbcaClientException(str(e))
+        except zeep.exceptions.Error as e:
+            raise ZeepError(str(e))
         return self._crl_convert_der2pem(r)
 
     def get_latest_ca_chain(self, ca_name: str) -> str:
@@ -253,6 +262,8 @@ class EjbcaClient:
             r = self._client.service.getLastCAChain(ca_name)
         except zeep.exceptions.Fault as e:
             raise EjbcaClientException(str(e))
+        except zeep.exceptions.Error as e:
+            raise ZeepError(str(e))
         for item in r:
             result.append(self._cert_data_to_pem(item))
         return "\n\n".join(result)
@@ -263,6 +274,8 @@ class EjbcaClient:
             r = self._client.service.getCertificate(sn, issuer)
         except zeep.exceptions.Fault as e:
             raise EjbcaClientException(str(e))
+        except zeep.exceptions.Error as e:
+            raise ZeepError(str(e))
         return self._cert_data_to_pem(r)
 
     def revoke_certificate_by_sn(self, sn: str, issuer: str):
@@ -271,6 +284,8 @@ class EjbcaClient:
             self._client.service.revokeCert(issuer, sn, 0)
         except zeep.exceptions.Fault as e:
             raise EjbcaClientException(str(e))
+        except zeep.exceptions.Error as e:
+            raise ZeepError(str(e))
 
     def restore_certificate_and_private_key_by_sn(
         self,
@@ -300,6 +315,8 @@ class EjbcaClient:
             result = base64.b64decode(r["keystoreData"])
         except zeep.exceptions.Fault as e:
             raise EjbcaClientException(str(e))
+        except zeep.exceptions.Error as e:
+            raise ZeepError(str(e))
         pkey, cert = self._p12_extract_pkey_cert(result, password)
         return cert, pkey
 
