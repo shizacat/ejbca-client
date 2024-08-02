@@ -1,5 +1,9 @@
 ## [Unreleased]
 
+## [1.1.2]
+### Added
+- Add exception ZeepError
+
 ## [1.1.1]
 ### Fix
 - Miss OpenSSL, in function cert_pem_extract_serial work through cryptography
