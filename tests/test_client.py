@@ -1,6 +1,10 @@
 import unittest
+from unittest.mock import MagicMock
+
+import zeep.exceptions
 
 from ejbca_client.client import EjbcaClient
+from ejbca_client.exception import EjbcaClientException
 
 
 class TestMain(unittest.TestCase):
@@ -36,3 +40,15 @@ class TestMain(unittest.TestCase):
             data = f.read()
         r = self.obj._crl_convert_der2pem(data)
         self.assertIsInstance(r, str)
+
+    def test_get_latest_crl_01_error(self):
+        """
+        Test raise zeep.exceptions.Error
+        """
+        self.obj._client = MagicMock()
+        self.obj._client.service = MagicMock()
+        self.obj._client.service.getLatestCRL = MagicMock(
+            side_effect=zeep.exceptions.Error)
+
+        with self.assertRaises(EjbcaClientException):
+            self.obj.get_latest_crl("test")
