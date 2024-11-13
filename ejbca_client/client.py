@@ -424,15 +424,19 @@ class EjbcaClient:
         cert = "-----BEGIN CERTIFICATE-----\n{}\n-----END CERTIFICATE-----"
         return cert.format(cert_data.certificateData.decode())
     
-    def get_available_end_entity_profiles(self) -> List[Dict[str, Union[str, int]]]:
+    def get_available_certificate_profiles(self, entity_profile_id: int) -> List[Dict[str, Union[str, int]]]:
         """
         Fetches available certificate profiles in an end entity profile.
 
+        Args:
+            entity_profile_id: ID of end entity profile
+
         Returns:
-            [{'name': 'EndEntityProfile1', 'id': 1}, ...]
+            [{'name': 'EndEntityProfile', 'id': 123}, ...]
+
         """
         try:
-            profiles = self._client.service.getAvailableEndEntityProfiles()
+            profiles = self._client.service.getAvailableCertificateProfiles(entity_profile_id)
 
             result = [{'name': profile.name, 'id': profile.id} for profile in profiles]
 
@@ -441,4 +445,3 @@ class EjbcaClient:
         except zeep.exceptions.Error as e:
             raise ZeepError(str(e))
         return result
-
