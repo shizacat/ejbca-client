@@ -437,11 +437,8 @@ class EjbcaClient:
         """
         try:
             profiles = self._client.service.getAvailableCertificateProfiles(entity_profile_id)
-
-            result = [{'name': profile.name, 'id': profile.id} for profile in profiles]
-
         except zeep.exceptions.Fault as e:
             raise EjbcaClientException(str(e))
         except zeep.exceptions.Error as e:
             raise ZeepError(str(e))
-        return result
+        return profiles
