@@ -1,5 +1,10 @@
 ## [Unreleased]
 
+## [1.2.0]
+### Added
+- Add new method 'get_available_certificate_profiles' - Fetches available certificate profiles in an end entity profile.
+  Co-authored-by: Илья Воронков <i.voronkov@centrofinans.ru>
+
 ## [1.1.2]
 ### Added
 - Add exception ZeepError
