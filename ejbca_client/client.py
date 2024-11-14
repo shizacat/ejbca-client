@@ -1,6 +1,6 @@
 import base64
 from pathlib import Path
-from typing import Optional, Union, List, Tuple
+from typing import Dict, Optional, Union, List, Tuple
 
 import zeep
 import zeep.exceptions
@@ -423,3 +423,22 @@ class EjbcaClient:
         """Extract from certificate object only certificate"""
         cert = "-----BEGIN CERTIFICATE-----\n{}\n-----END CERTIFICATE-----"
         return cert.format(cert_data.certificateData.decode())
+    
+    def get_available_certificate_profiles(self, entity_profile_id: int) -> List[Dict[str, Union[str, int]]]:
+        """
+        Fetches available certificate profiles in an end entity profile.
+
+        Args:
+            entity_profile_id: ID of end entity profile
+
+        Returns:
+            [{'name': 'EndEntityProfile', 'id': 123}, ...]
+
+        """
+        try:
+            profiles = self._client.service.getAvailableCertificateProfiles(entity_profile_id)
+        except zeep.exceptions.Fault as e:
+            raise EjbcaClientException(str(e))
+        except zeep.exceptions.Error as e:
+            raise ZeepError(str(e))
+        return profiles
