@@ -5,4 +5,5 @@ __all__ = [
     "EjbcaClient",
     "SubjectDN",
     "cert_pem_extract_serial",
+    "cert_pem_extract_expiration_date",
 ]
