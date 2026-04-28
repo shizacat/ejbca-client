@@ -1,5 +1,7 @@
 ## [Unreleased]
 
+- Project is now fully configured via `pyproject.toml` (no `setup.cfg`)
+
 ## [1.2.0]
 ### Added
 - Add new method 'get_available_certificate_profiles' - Fetches available certificate profiles in an end entity profile.
