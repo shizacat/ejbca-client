@@ -6,3 +6,4 @@ __all__ = [
     "SubjectDN",
     "cert_pem_extract_serial",
 ]
+__version__ = "0.1.0"
