@@ -1,6 +1,40 @@
 [build-system]
-requires = [
-    "setuptools>=42",
-    "wheel"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ejbca_client"
+version = "1.2.0"
+authors = [
+    {name = "Alexey Matveev"},
 ]
-build-backend = "setuptools.build_meta"
+description = "Python ejbca client over SOAP api"
+readme = {file = "README.md", content-type = "text/markdown"}
+license = {file = "LICENSE"}
+requires-python = ">=3.8"
+dependencies = [
+    "zeep>=4.1.0",
+    "requests>=2.28.1",
+    "cryptography>=41",
+]
+classifiers = [
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "License :: OSI Approved :: MIT License",
+]
+
+[project.urls]
+Homepage = "https://github.com/shizacat/ejbca-client"
+
+[tool.hatch.build.targets.sdist]
+include = ["ejbca_client"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["ejbca_client"]
