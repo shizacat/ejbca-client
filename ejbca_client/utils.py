@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Optional
 from dataclasses import dataclass
 
@@ -29,3 +30,8 @@ class SubjectDN:
 def cert_pem_extract_serial(cert: str) -> str:
     cert_obj = x509.load_pem_x509_certificate(cert.encode())
     return "{:x}".format(cert_obj.serial_number)
+
+
+def cert_pem_extract_expiration_date(cert: str) -> datetime:
+    cert_obj = x509.load_pem_x509_certificate(cert.encode())
+    return cert_obj.not_valid_after
